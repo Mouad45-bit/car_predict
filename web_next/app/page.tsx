@@ -52,7 +52,9 @@ export default function HomePage() {
     setPrice(null);
 
     if (!canSubmit) {
-      setError("Veuillez remplir correctement tous les champs (valeurs numériques).");
+      setError(
+        "Veuillez remplir correctement tous les champs (valeurs numériques)."
+      );
       return;
     }
 
@@ -78,7 +80,9 @@ export default function HomePage() {
 
       setPrice(data.price);
     } catch (err: any) {
-      setError("Impossible de contacter le serveur. Vérifie que Next.js et FastAPI sont lancés.");
+      setError(
+        "Impossible de contacter le serveur. Vérifie que Next.js et FastAPI sont lancés."
+      );
     } finally {
       setLoading(false);
     }
@@ -93,7 +97,8 @@ export default function HomePage() {
             Car Price Predictor
           </h1>
           <p className="mt-1 text-sm text-zinc-600">
-            Teste ton modèle ML : remplis les caractéristiques et récupère une estimation du prix.
+            Teste ton modèle ML : remplis les caractéristiques et récupère une
+            estimation du prix.
           </p>
         </div>
 
@@ -101,16 +106,9 @@ export default function HomePage() {
           {/* Form card */}
           <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
             <div className="mb-4 flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-sm font-semibold text-zinc-900">Entrées du modèle</h2>
-                <p className="mt-1 text-xs text-zinc-500">
-                  Les champs correspondent exactement aux features attendues par l’API.
-                </p>
-              </div>
-
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                /api/predict
-              </span>
+              <h2 className="text-sm font-semibold text-zinc-900">
+                Entrées du modèle
+              </h2>
             </div>
 
             <form onSubmit={onSubmit} className="space-y-4">
@@ -176,7 +174,7 @@ export default function HomePage() {
                 <button
                   type="submit"
                   disabled={loading || !canSubmit}
-                  className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="cursor-pointer inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? "Prédiction..." : "Prédire le prix"}
                 </button>
@@ -196,7 +194,7 @@ export default function HomePage() {
                     setPrice(null);
                     setError(null);
                   }}
-                  className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                  className="cursor-pointer rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
                 >
                   Réinitialiser
                 </button>
@@ -214,28 +212,29 @@ export default function HomePage() {
             <div className="mt-5 rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
               {price === null ? (
                 <div>
-                  <div className="text-sm text-zinc-600">Aucune prédiction pour le moment.</div>
+                  <div className="text-sm text-zinc-600">
+                    Aucune prédiction pour le moment.
+                  </div>
                   <div className="mt-2 text-xs text-zinc-500">
-                    Clique sur <span className="font-medium">“Prédire le prix”</span>.
+                    Clique sur{" "}
+                    <span className="font-medium">“Prédire le prix”</span>.
                   </div>
                 </div>
               ) : (
                 <div>
-                  <div className="text-xs font-medium text-zinc-600">Prix estimé</div>
+                  <div className="text-xs font-medium text-zinc-600">
+                    Prix estimé
+                  </div>
                   <div className="mt-1 text-3xl font-semibold tracking-tight text-zinc-900">
-                    {price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    {price.toLocaleString(undefined, {
+                      maximumFractionDigits: 2,
+                    })}
                   </div>
                   <div className="mt-2 text-xs text-zinc-500">
                     (Valeur brute retournée par l’API)
                   </div>
                 </div>
               )}
-            </div>
-
-            <div className="mt-4 text-xs text-zinc-500">
-              Astuce : si tu vois une erreur, vérifie que <span className="font-medium">FastAPI</span>{" "}
-              tourne sur <span className="font-medium">localhost:8000</span> et que ta route Next{" "}
-              <span className="font-medium">/api/predict</span> est bien créée.
             </div>
           </aside>
         </div>
