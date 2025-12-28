@@ -14,28 +14,43 @@ type PredictPayload = {
 };
 
 export async function POST(req: Request) {
+  const base = process.env.ML_API_URL || "http://127.0.0.1:8000";
+
+  // Timeout (sinon fetch peut attendre à l'infini)
+  const controller = new AbortController();
+  const timeoutMs = 8000;
+  const t = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
     const body = (await req.json()) as PredictPayload;
 
-    // Base URL de ton API FastAPI (avec fallback local)
-    const base = process.env.ML_API_URL || "http://127.0.0.1:8000";
+    console.log("[/api/predict] -> calling ML API:", `${base}/predict`, body);
 
     const r = await fetch(`${base}/predict`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal: controller.signal,
+      cache: "no-store",
     });
 
-    const data = await r.json();
+    const text = await r.text(); // plus robuste que r.json() (évite plantage si HTML)
+    let data: any = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { raw: text };
+    }
+
+    console.log("[/api/predict] <- ML API status:", r.status, data);
 
     if (!r.ok) {
       return NextResponse.json(
-        { error: data?.detail ?? data?.error ?? "ML API error" },
-        { status: r.status }
+        { error: data?.detail ?? data?.error ?? `ML API error (${r.status})` },
+        { status: 500 }
       );
     }
 
-    // On s'attend à un { price: number }
     const price = data?.price;
     if (typeof price !== "number") {
       return NextResponse.json(
@@ -44,18 +59,21 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Stocker l'historique dans le CSV
-    await appendHistory({
-      ...body,
-      price,
+    // ✅ Lancer l'écriture CSV sans bloquer la réponse (évite le “freeze”)
+    appendHistory({ ...body, price }).catch((err) => {
+      console.error("[/api/predict] appendHistory failed:", err);
     });
 
-    // Réponse propre au frontend
     return NextResponse.json({ price }, { status: 200 });
   } catch (e: any) {
-    return NextResponse.json(
-      { error: "Erreur serveur (predict)." },
-      { status: 500 }
-    );
+    const msg =
+      e?.name === "AbortError"
+        ? `Timeout: l'API ML ne répond pas après ${timeoutMs}ms.`
+        : `Erreur serveur (predict): ${e?.message ?? String(e)}`;
+
+    console.error("[/api/predict] error:", e);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  } finally {
+    clearTimeout(t);
   }
 }
