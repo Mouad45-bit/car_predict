@@ -87,7 +87,7 @@ export default async function HistoryPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-zinc-50 text-left text-xs font-semibold text-zinc-700">
-                  <tr className="[&>th]:px-3 [&>th]:py-2">
+                  <tr className="[&>th]:px-6 [&>th]:py-2">
                     <th>Date</th>
                     <th>Année</th>
                     <th>Kilométrage</th>
@@ -179,9 +179,6 @@ export default async function HistoryPage() {
                   {avgPrice === null || !Number.isFinite(avgPrice)
                     ? "-"
                     : money(avgPrice)}
-                </div>
-                <div className="mt-2 text-xs text-zinc-500">
-                  (sur les lignes affichées)
                 </div>
               </div>
 
