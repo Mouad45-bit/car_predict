@@ -2,6 +2,7 @@
 
 "use client";
 
+import { MinimalHeader } from "./components/MinimalHeader";
 import { useMemo, useState } from "react";
 
 type PredictPayload = {
@@ -90,6 +91,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-zinc-50">
+      <MinimalHeader current="home" />
       <div className="mx-auto max-w-4xl px-4 py-10">
         {/* Header */}
         <div className="mb-8">
