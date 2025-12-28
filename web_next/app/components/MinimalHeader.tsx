@@ -11,7 +11,7 @@ export function MinimalHeader({ current }: { current?: "home" | "history" }) {
 
   return (
     <header className="h-18 sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur">
-      <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link href="/" className="macondo text-3xl uppercase font-semibold tracking-tight text-zinc-900">
           Car Price
         </Link>
