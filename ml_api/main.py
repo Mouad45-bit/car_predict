@@ -7,7 +7,7 @@ import pandas as pd
 
 app = FastAPI(title="Car Price ML API")
 
-artifact = joblib.load("car_price_model.joblib")
+artifact = joblib.load("linear_simple.joblib")
 model = artifact["model"]
 feature_names = artifact["feature_names"]
 
