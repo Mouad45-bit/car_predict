@@ -1,5 +1,4 @@
 // app/page.tsx
-
 "use client";
 
 import { MinimalHeader } from "./components/MinimalHeader";
@@ -15,7 +14,49 @@ type PredictPayload = {
   age_car: number;
 };
 
+type Option = {
+  id: number;
+  label: string;
+};
+
+// 8 marques (manufacturer_id: 0..7) — EXEMPLES réalistes
+const MANUFACTURERS: Option[] = [
+  { id: 0, label: "Dacia" },
+  { id: 1, label: "Renault" },
+  { id: 2, label: "Peugeot" },
+  { id: 3, label: "Volkswagen" },
+  { id: 4, label: "Hyundai" },
+  { id: 5, label: "Toyota" },
+  { id: 6, label: "Kia" },
+  { id: 7, label: "BMW" },
+];
+
+// 6 types (type_id: 0..5) — EXEMPLES réalistes
+const TYPES: Option[] = [
+  { id: 0, label: "Berline" },
+  { id: 1, label: "SUV" },
+  { id: 2, label: "Citadine" },
+  { id: 3, label: "Pickup" },
+  { id: 4, label: "Break" },
+  { id: 5, label: "Monospace" },
+];
+
+// Carburant + Transmission (labels réels)
+const FUELS: Option[] = [
+  { id: 0, label: "Essence" },
+  { id: 1, label: "Diesel" },
+  { id: 2, label: "Électrique" },
+  { id: 3, label: "Hybride" },
+];
+
+const TRANSMISSIONS: Option[] = [
+  { id: 0, label: "Manuelle" },
+  { id: 1, label: "Automatique" },
+];
+
 export default function HomePage() {
+  const CURRENT_YEAR = new Date().getFullYear();
+
   const [form, setForm] = useState<PredictPayload>({
     year: 2016,
     odometer: 70549,
@@ -23,7 +64,7 @@ export default function HomePage() {
     fuel_id: 1,
     transmission_id: 0,
     type_id: 2,
-    age_car: 9,
+    age_car: Math.max(0, CURRENT_YEAR - 2016),
   });
 
   const [loading, setLoading] = useState(false);
@@ -37,13 +78,17 @@ export default function HomePage() {
       Number.isFinite(form.manufacturer_id) &&
       Number.isFinite(form.fuel_id) &&
       Number.isFinite(form.transmission_id) &&
-      Number.isFinite(form.type_id) &&
-      Number.isFinite(form.age_car)
+      Number.isFinite(form.type_id)
     );
   }, [form]);
 
   function setNumber<K extends keyof PredictPayload>(key: K, value: string) {
     const n = value === "" ? NaN : Number(value);
+    setForm((prev) => ({ ...prev, [key]: n }));
+  }
+
+  function setSelect<K extends keyof PredictPayload>(key: K, value: string) {
+    const n = Number(value);
     setForm((prev) => ({ ...prev, [key]: n }));
   }
 
@@ -53,18 +98,25 @@ export default function HomePage() {
     setPrice(null);
 
     if (!canSubmit) {
-      setError(
-        "Veuillez remplir correctement tous les champs (valeurs numériques)."
-      );
+      setError("Veuillez remplir correctement tous les champs (valeurs valides).");
       return;
     }
+
+    const age_car = Number.isFinite(form.year)
+      ? Math.max(0, CURRENT_YEAR - form.year)
+      : NaN;
+
+    const payload: PredictPayload = {
+      ...form,
+      age_car,
+    };
 
     setLoading(true);
     try {
       const res = await fetch("/api/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -80,27 +132,29 @@ export default function HomePage() {
       }
 
       setPrice(data.price);
-    } catch (err: any) {
-      setError(
-        "Impossible de contacter le serveur. Vérifie que Next.js et FastAPI sont lancés."
-      );
+    } catch {
+      setError("Impossible de contacter le serveur. Vérifie que Next.js et FastAPI sont lancés.");
     } finally {
       setLoading(false);
     }
   }
 
+  const computedAge = Number.isFinite(form.year)
+    ? Math.max(0, CURRENT_YEAR - form.year)
+    : NaN;
+
   return (
     <main className="min-h-screen bg-zinc-50">
       <MinimalHeader current="home" />
+
       <div className="mx-auto max-w-4xl px-4 py-10">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-            Car Price Predictor
+          <h1 className="text-2xl uppercase font-semibold tracking-tight text-zinc-900">
+            prédiction du prix
           </h1>
           <p className="mt-1 text-sm text-zinc-600">
-            Teste ton modèle ML : remplis les caractéristiques et récupère une
-            estimation du prix.
+            Remplis les caractéristiques et récupère une estimation du prix.
           </p>
         </div>
 
@@ -108,75 +162,83 @@ export default function HomePage() {
           {/* Form card */}
           <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
             <div className="mb-4 flex items-start justify-between gap-4">
-              <h2 className="text-sm font-semibold text-zinc-900">
-                Entrées du modèle
-              </h2>
+              <h2 className="text-medium font-semibold text-zinc-900">Entrées du modèle</h2>
             </div>
 
             <form onSubmit={onSubmit} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
-                  label="Année (year)"
+                  label="Année (ex: 2016)"
                   value={form.year}
-                  onChange={(v) => setNumber("year", v)}
+                  onChange={(v) => {
+                    setNumber("year", v);
+                    setForm((prev) => {
+                      const yy = v === "" ? NaN : Number(v);
+                      return {
+                        ...prev,
+                        year: yy,
+                        age_car: Number.isFinite(yy) ? Math.max(0, CURRENT_YEAR - yy) : NaN,
+                      };
+                    });
+                  }}
                   placeholder="ex: 2016"
                 />
+
                 <Field
-                  label="Kilométrage (odometer)"
+                  label="Kilométrage (en km)"
                   value={form.odometer}
                   onChange={(v) => setNumber("odometer", v)}
                   placeholder="ex: 70549"
                 />
 
-                <Field
-                  label="Marque ID (manufacturer_id)"
+                <SelectField
+                  label="Marque"
                   value={form.manufacturer_id}
-                  onChange={(v) => setNumber("manufacturer_id", v)}
-                  placeholder="ex: 0"
+                  onChange={(v) => setSelect("manufacturer_id", v)}
+                  options={MANUFACTURERS}
                 />
-                <Field
-                  label="Carburant ID (fuel_id)"
+
+                <SelectField
+                  label="Carburant"
                   value={form.fuel_id}
-                  onChange={(v) => setNumber("fuel_id", v)}
-                  placeholder="ex: 1"
+                  onChange={(v) => setSelect("fuel_id", v)}
+                  options={FUELS}
                 />
 
-                <Field
-                  label="Transmission ID (transmission_id)"
+                <SelectField
+                  label="Transmission"
                   value={form.transmission_id}
-                  onChange={(v) => setNumber("transmission_id", v)}
-                  placeholder="ex: 0"
-                />
-                <Field
-                  label="Type ID (type_id)"
-                  value={form.type_id}
-                  onChange={(v) => setNumber("type_id", v)}
-                  placeholder="ex: 2"
+                  onChange={(v) => setSelect("transmission_id", v)}
+                  options={TRANSMISSIONS}
                 />
 
-                <div className="sm:col-span-2">
-                  <Field
-                    label="Âge voiture (age_car)"
-                    value={form.age_car}
-                    onChange={(v) => setNumber("age_car", v)}
-                    placeholder="ex: 9"
-                  />
-                </div>
+                <SelectField
+                  label="Type de voiture"
+                  value={form.type_id}
+                  onChange={(v) => setSelect("type_id", v)}
+                  options={TYPES}
+                />
+
+                <Field
+                  label="Âge (calculé automatiquement)"
+                  value={computedAge}
+                  onChange={() => {}}
+                  placeholder="auto"
+                  disabled
+                />
               </div>
 
-              {/* Feedback */}
               {error && (
                 <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                   {error}
                 </div>
               )}
 
-              {/* Actions */}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <button
                   type="submit"
                   disabled={loading || !canSubmit}
-                  className="cursor-pointer inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="cursor-pointer inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? "Prédiction..." : "Prédire le prix"}
                 </button>
@@ -191,7 +253,7 @@ export default function HomePage() {
                       fuel_id: 1,
                       transmission_id: 0,
                       type_id: 2,
-                      age_car: 9,
+                      age_car: Math.max(0, CURRENT_YEAR - 2016),
                     });
                     setPrice(null);
                     setError(null);
@@ -206,35 +268,24 @@ export default function HomePage() {
 
           {/* Result card */}
           <aside className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-zinc-900">Résultat</h2>
-            <p className="mt-1 text-xs text-zinc-500">
-              Estimation renvoyée par le modèle.
-            </p>
+            <h2 className="text-medium font-semibold text-zinc-900">Résultat</h2>
+            <p className="mt-1 text-sm text-zinc-600">Estimation renvoyée par le modèle.</p>
 
             <div className="mt-5 rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
               {price === null ? (
                 <div>
-                  <div className="text-sm text-zinc-600">
-                    Aucune prédiction pour le moment.
-                  </div>
+                  <div className="text-sm text-zinc-600">Aucune prédiction pour le moment.</div>
                   <div className="mt-2 text-xs text-zinc-500">
-                    Clique sur{" "}
-                    <span className="font-medium">“Prédire le prix”</span>.
+                    Clique sur <span className="font-medium">“Prédire le prix”</span>.
                   </div>
                 </div>
               ) : (
                 <div>
-                  <div className="text-xs font-medium text-zinc-600">
-                    Prix estimé
-                  </div>
+                  <div className="text-xs font-medium text-zinc-600">Prix estimé</div>
                   <div className="mt-1 text-3xl font-semibold tracking-tight text-zinc-900">
-                    {price.toLocaleString(undefined, {
-                      maximumFractionDigits: 2,
-                    })}
+                    {price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   </div>
-                  <div className="mt-2 text-xs text-zinc-500">
-                    (Valeur brute retournée par l’API)
-                  </div>
+                  <div className="mt-2 text-xs text-zinc-500">(Valeur brute retournée par l’API)</div>
                 </div>
               )}
             </div>
@@ -250,8 +301,9 @@ function Field(props: {
   value: number;
   onChange: (v: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 }) {
-  const { label, value, onChange, placeholder } = props;
+  const { label, value, onChange, placeholder, disabled } = props;
 
   return (
     <label className="block">
@@ -261,8 +313,58 @@ function Field(props: {
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         inputMode="numeric"
-        className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm outline-none placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200"
+        disabled={disabled}
+        className={[
+          "mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm outline-none placeholder:text-zinc-400",
+          "focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200",
+          disabled ? "cursor-not-allowed bg-zinc-50 text-zinc-600" : "",
+        ].join(" ")}
       />
+    </label>
+  );
+}
+
+function SelectField(props: {
+  label: string;
+  value: number;
+  onChange: (v: string) => void;
+  options: Option[];
+}) {
+  const { label, value, onChange, options } = props;
+
+  return (
+    <label className="block">
+      <span className="text-xs font-medium text-zinc-700">{label}</span>
+
+      <div className="relative mt-1">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={[
+            "w-full appearance-none rounded-xl border border-zinc-200 bg-white px-3 py-2 pr-10 text-sm text-zinc-900 shadow-sm outline-none",
+            "focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200",
+          ].join(" ")}
+        >
+          {options.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Chevron */}
+        <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-zinc-500">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M7 10l5 5 5-5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
     </label>
   );
 }
