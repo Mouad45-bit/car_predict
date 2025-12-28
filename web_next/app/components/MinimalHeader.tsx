@@ -12,14 +12,14 @@ export function MinimalHeader({ current }: { current?: "home" | "history" }) {
   return (
     <header className="h-18 sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-        <Link href="/" className="text-2xl uppercase font-semibold tracking-tight text-zinc-900">
+        <Link href="/" className="macondo text-3xl uppercase font-semibold tracking-tight text-zinc-900">
           Car Price
         </Link>
 
         <nav className="flex items-center gap-6 text-base">
           <Link
             href="/"
-            className={`group flex flex-col items-center leading-none ${linkTextClass(
+            className={`font-bold group flex flex-col items-center leading-none ${linkTextClass(
               current === "home"
             )}`}
           >
@@ -33,7 +33,7 @@ export function MinimalHeader({ current }: { current?: "home" | "history" }) {
 
           <Link
             href="/history"
-            className={`group flex flex-col items-center leading-none ${linkTextClass(
+            className={`font-bold group flex flex-col items-center leading-none ${linkTextClass(
               current === "history"
             )}`}
           >
