@@ -285,7 +285,6 @@ export default function HomePage() {
                   <div className="mt-1 text-3xl font-semibold tracking-tight text-zinc-900">
                     {price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   </div>
-                  <div className="mt-2 text-xs text-zinc-500">(Valeur brute retournée par l’API)</div>
                 </div>
               )}
             </div>
