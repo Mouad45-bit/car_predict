@@ -63,14 +63,14 @@ export default async function HistoryPage() {
     <main className="min-h-screen bg-zinc-50">
       <MinimalHeader current="history" />
 
-      <div className="mx-auto max-w-4xl px-4 py-10">
+      <div className="mx-auto max-w-6xl px-4 py-10">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl uppercase font-semibold tracking-tight text-zinc-900">
             historique des prédictions
           </h1>
           <p className="mt-1 text-sm text-zinc-600">
-            Total affiché : {rows.length} (les plus récentes en haut)
+            Total affiché : {rows.length}
           </p>
         </div>
 
@@ -112,12 +112,12 @@ export default async function HistoryPage() {
                     </tr>
                   ) : (
                     rows.map((r, idx) => (
-                      <tr key={r.ts + idx} className="[&>td]:px-3 [&>td]:py-2">
+                      <tr key={r.ts + idx} className="[&>td]:px-3 [&>td]:py-4">
                         <td className="whitespace-nowrap text-zinc-700">
                           {new Date(r.ts).toLocaleString()}
                         </td>
-                        <td>{r.year}</td>
-                        <td>{r.odometer}</td>
+                        <td className="whitespace-nowrap text-zinc-700">{r.year}</td>
+                        <td className="whitespace-nowrap text-zinc-700">{r.odometer}</td>
 
                         <td className="whitespace-nowrap">
                           <span className="inline-flex rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-xs text-zinc-700">
@@ -143,7 +143,7 @@ export default async function HistoryPage() {
                           </span>
                         </td>
 
-                        <td>{r.age_car}</td>
+                        <td className="whitespace-nowrap text-zinc-700">{r.age_car}</td>
 
                         <td className="text-right font-medium text-zinc-900">
                           {Number.isFinite(r.price) ? money(r.price) : "-"}
